@@ -1,5 +1,4 @@
-import { JSDOM } from "jsdom";
-import createDOMPurify from "dompurify";
+import sanitizeHtml from "sanitize-html";
 
 /**
  * Sanitasi HTML body berita sebelum dirender di halaman publik.
@@ -8,20 +7,16 @@ import createDOMPurify from "dompurify";
  * Izinkan hanya tag dari toolbar Tiptap (p, h2-h3, ul/ol/li, strong, em,
  * a, br) ditag struktural dasar.
  *
- * jsdom di-instansiasi manual (bukan default isomorphic-dompurify):
- * bundler serverless Vercel gagal memuat chain ESM-nya di runtime Node.
+ * sanitize-html dipilih alih-alih DOMPurify: murni Node tanpa DOM browser,
+ * jadi aman dimuat di runtime serverless Vercel (jsdom gagal di sana).
  */
-const window = new JSDOM("").window;
-const DOMPurify = createDOMPurify(window);
-
-const ALLOWED_TAGS = [
-  "p", "h2", "h3", "ul", "ol", "li", "strong", "em", "a", "br", "blockquote",
-];
-
 export function sanitizeNewsHtml(html: string): string {
-  return DOMPurify.sanitize(html, {
-    ALLOWED_TAGS,
-    ALLOWED_ATTR: ["href", "rel", "target"],
-    ALLOW_DATA_ATTR: false,
+  return sanitizeHtml(html, {
+    allowedTags: ["p", "h2", "h3", "ul", "ol", "li", "strong", "em", "a", "br", "blockquote"],
+    allowedAttributes: { a: ["href", "rel", "target"] },
+    allowedSchemes: ["http", "https", "mailto"],
+    allowedSchemesByTag: { a: ["http", "https", "mailto"] },
+    // Tiptap menulis entity aman; biarkan lolos tanpa escape ganda.
+    disallowedTagsMode: "discard",
   });
 }
