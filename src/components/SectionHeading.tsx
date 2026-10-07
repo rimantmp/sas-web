@@ -23,9 +23,5 @@ export default function SectionHeading({ index, title, intro, tone = "light", id
 }
 
 export function Placeholder({ children }: { children: React.ReactNode }) {
-  return (
-    <span className="inline-block rounded-sm border border-dashed border-ink-soft px-1.5 font-mono text-[0.9em] text-ink-soft">
-      {children}
-    </span>
-  );
+  return <span className="text-ink-soft">{children}</span>;
 }

@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Barlow, Barlow_Condensed } from "next/font/google";
 import "./globals.css";
+import PageViewTracker from "@/components/PageViewTracker";
 
 // Barlow: road-sign grotesk, stays legible on small screens in bright light.
 const body = Barlow({
@@ -35,7 +36,10 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="id" className={`${body.variable} ${display.variable} antialiased`}>
-      <body className="min-h-screen">{children}</body>
+      <body className="min-h-screen">
+        {children}
+        <PageViewTracker />
+      </body>
     </html>
   );
 }

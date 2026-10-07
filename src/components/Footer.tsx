@@ -1,17 +1,39 @@
 import Image from "next/image";
-import { company, isFilled } from "@/lib/company";
+import type { Company } from "@/lib/types";
+import { isFilled } from "@/lib/types";
 import { Placeholder } from "./SectionHeading";
 
-const links = [
-  { label: "Tentang kami", href: "#tentang" },
-  { label: "Produk & HET", href: "#harga" },
-  { label: "Kalkulator tebus", href: "#kalkulator" },
-  { label: "Cara menebus pupuk", href: "#cara-tebus" },
-  { label: "Tanya jawab", href: "#faq" },
-  { label: "Kontak", href: "#kontak" },
-];
+type Link = { label: string; href: string };
 
-export default function Footer() {
+function parseLinks(raw: string | undefined): Link[] {
+  if (!raw) return [];
+  try {
+    const parsed = JSON.parse(raw);
+    return Array.isArray(parsed) ? parsed.filter((x) => x && typeof x.href === "string") : [];
+  } catch {
+    return [];
+  }
+}
+
+type Props = {
+  company: Company;
+  texts: Record<string, string>;
+};
+
+export default function Footer({ company, texts }: Props) {
+  const footerLinks = parseLinks(texts.footer_links);
+  const defaultFooterLinks: Link[] = [
+    { label: "Tentang kami", href: "/#tentang" },
+    { label: "Berita", href: "/berita" },
+    { label: "Produk & HET", href: "/#harga" },
+    { label: "Kalkulator tebus", href: "/#kalkulator" },
+    { label: "Cara menebus pupuk", href: "/#cara-tebus" },
+    { label: "Tanya jawab", href: "/#faq" },
+    { label: "Kios resmi", href: "/kios" },
+    { label: "Kontak", href: "/#kontak" },
+  ];
+  const links = footerLinks.length ? footerLinks : defaultFooterLinks;
+
   return (
     <footer className="border-t border-line bg-paper text-ink">
       <div className="mx-auto max-w-6xl px-4 py-16 sm:px-6">
@@ -29,15 +51,18 @@ export default function Footer() {
               </div>
             </div>
             <p className="mt-4 text-sm text-ink-soft leading-relaxed max-w-sm">
-              Menyalurkan pupuk bersubsidi pemerintah kepada kios pupuk resmi untuk melayani petani terdaftar e-RDKK dengan prinsip enam tepat.
+              {texts.footer_about ||
+                "Menyalurkan pupuk bersubsidi pemerintah kepada kios pupuk resmi untuk melayani petani terdaftar e-RDKK dengan prinsip enam tepat."}
             </p>
           </div>
 
           <div>
-            <h3 className="font-heading text-lg font-bold text-ink mb-4">Navigasi</h3>
+            <h3 className="font-heading text-lg font-bold text-ink mb-4">
+              {texts.footer_nav_title || "Navigasi"}
+            </h3>
             <ul className="space-y-2.5 text-sm">
               {links.map((l) => (
-                <li key={l.href}>
+                <li key={l.href + l.label}>
                   <a href={l.href} className="text-ink-soft hover:text-sas-red transition-colors">
                     {l.label}
                   </a>
@@ -47,18 +72,21 @@ export default function Footer() {
           </div>
 
           <div>
-            <h3 className="font-heading text-lg font-bold text-ink mb-4">Pengawasan & Aturan</h3>
+            <h3 className="font-heading text-lg font-bold text-ink mb-4">
+              {texts.footer_watch_title || "Pengawasan & Aturan"}
+            </h3>
             <p className="text-sm text-ink-soft leading-relaxed">
-              Pupuk bersubsidi adalah barang dalam pengawasan. Penjualan di atas HET atau penyelewengan alokasi merupakan pelanggaran hukum yang diawasi oleh KP3 dan dinas terkait.
+              {texts.footer_watch_text ||
+                "Pupuk bersubsidi adalah barang dalam pengawasan. Penjualan di atas HET atau penyelewengan alokasi merupakan pelanggaran hukum yang diawasi oleh KP3 dan dinas terkait."}
             </p>
             <div className="mt-4 text-sm">
-              <span className="font-semibold text-ink block">Kontak layanan:</span>
-              {isFilled(company.phoneDisplay) ? (
-                <a href={`tel:${company.phoneDisplay.replace(/\s|-/g, "")}`} className="text-sas-red font-medium">
-                  {company.phoneDisplay}
+              <span className="font-semibold text-ink block">{texts.footer_contact_label || "Kontak layanan:"}</span>
+              {isFilled(company.phone) ? (
+                <a href={`tel:${company.phone.replace(/\s|-/g, "")}`} className="text-sas-red font-medium">
+                  {company.phone}
                 </a>
               ) : (
-                <Placeholder>{company.phoneDisplay}</Placeholder>
+                <Placeholder>{company.phone}</Placeholder>
               )}
             </div>
           </div>
@@ -68,7 +96,7 @@ export default function Footer() {
           <p>
             (c) {new Date().getFullYear()} {company.name}. Seluruh hak cipta dilindungi undang-undang.
           </p>
-          <a href="#top" className="font-semibold text-ink hover:text-sas-red transition-colors">
+          <a href="/#top" className="font-semibold text-ink hover:text-sas-red transition-colors">
             Kembali ke atas
           </a>
         </div>

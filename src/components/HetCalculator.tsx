@@ -2,17 +2,27 @@
 
 import { useId, useState } from "react";
 import SectionHeading from "./SectionHeading";
-import { fertilizers, rupiah } from "@/lib/company";
+import { rupiah } from "@/lib/types";
+import type { Fertilizer } from "@/lib/types";
+
+type Props = {
+  fertilizers: Fertilizer[];
+  texts: Record<string, string>;
+};
 
 const MAX_BAGS = 200;
 
-export default function HetCalculator() {
-  const [selectedId, setSelectedId] = useState(fertilizers[0].id);
+export default function HetCalculator({ fertilizers, texts }: Props) {
+  const [selectedId, setSelectedId] = useState<string | null>(null);
   const [bagsInput, setBagsInput] = useState("2");
   const qtyId = useId();
   const errId = useId();
 
-  const f = fertilizers.find((x) => x.id === selectedId) ?? fertilizers[0];
+  // Kalkulator terlihat bila ada minimal satu pupuk aktif.
+  if (fertilizers.length === 0) return null;
+
+  const selected = fertilizers.find((x) => x.id === selectedId) ?? fertilizers[0];
+  const f = selected;
   const bags = Number(bagsInput);
   const error =
     bagsInput.trim() === ""
@@ -23,7 +33,7 @@ export default function HetCalculator() {
           ? `Maksimal ${MAX_BAGS} sak per hitungan.`
           : null;
 
-  const pricePerBag = f.pricePerKg * f.bagKg;
+  const pricePerBag = Number(f.price_per_kg) * Number(f.bag_kg);
   const total = error ? null : bags * pricePerBag;
 
   const step = (delta: number) => {
@@ -36,10 +46,13 @@ export default function HetCalculator() {
       <div className="mx-auto max-w-6xl px-4 py-20 sm:px-6 lg:py-28">
         <SectionHeading
           id="kalkulator-judul"
-          index="03"
+          index="04"
           tone="dark"
-          title="Hitung biaya tebus sebelum ke kios"
-          intro="Pilih pupuk dan jumlah sak. Angka yang keluar adalah batas tertinggi yang boleh Anda bayar."
+          title={texts.calculator_title || "Hitung biaya tebus sebelum ke kios"}
+          intro={
+            texts.calculator_intro ||
+            "Pilih pupuk dan jumlah sak. Angka yang keluar adalah batas tertinggi yang boleh Anda bayar."
+          }
         />
 
         <div className="mt-12 grid gap-10 lg:grid-cols-[1.2fr_1fr] lg:gap-14">
@@ -60,8 +73,8 @@ export default function HetCalculator() {
                       onChange={() => setSelectedId(item.id)}
                       className="sr-only"
                     />
-                    <span className="font-semibold">{item.short}</span>
-                    <span className="text-sm tabular-nums opacity-80">{rupiah(item.pricePerKg)}/kg</span>
+                    <span className="font-semibold">{item.short || item.name}</span>
+                    <span className="text-sm tabular-nums opacity-80">{rupiah(Number(item.price_per_kg))}/kg</span>
                   </label>
                 ))}
               </div>
@@ -69,7 +82,7 @@ export default function HetCalculator() {
 
             <div>
               <label htmlFor={qtyId} className="mb-3 block font-semibold">
-                Jumlah sak ({f.bagKg} kg per sak)
+                Jumlah sak ({f.bag_kg} kg per sak)
               </label>
               <div className="flex items-stretch gap-2">
                 <button
@@ -121,13 +134,13 @@ export default function HetCalculator() {
               </div>
               <div className="flex justify-between gap-4">
                 <dt className="text-white/80">Jumlah</dt>
-                <dd className="tabular-nums">{error ? "-" : `${bags} sak (${bags * f.bagKg} kg)`}</dd>
+                <dd className="tabular-nums">{error ? "-" : `${bags} sak (${bags * Number(f.bag_kg)} kg)`}</dd>
               </div>
             </dl>
 
             {/* The page's single cyan moment: the number the farmer takes to the kiosk. */}
             <div className="mt-6 rounded-md bg-sas-cyan p-5 text-ink">
-              <p className="font-semibold">Paling banyak Anda bayar</p>
+              <p className="font-semibold">{texts.calculator_result_label || "Paling banyak Anda bayar"}</p>
               {total === null ? (
                 <p className="mt-1 font-heading text-3xl font-bold">Lengkapi jumlah sak</p>
               ) : (
